@@ -1,0 +1,19 @@
+{
+  "name": "blockchain-document-registry",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
+    "dotenv": "^17.4.2",
+    "forge-std": "github:foundry-rs/forge-std",
+    "hardhat": "^3.14.0"
+  },
+  "type": "module"
+}
