@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Hash Generator — Blockchain Document Registry</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0a0e17;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0d1321 0%, #1a1f35 100%);
+      border-bottom: 1px solid #2a3050;
+      padding: 24px 32px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .header h1 span { color: #6c8cff; }
+
+    .header p {
+      font-size: 0.9rem;
+      color: #8892a8;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      background: #111827;
+      border-radius: 12px;
+      padding: 4px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      border: none;
+      background: transparent;
+      color: #8892a8;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: #1e293b;
+      color: #6c8cff;
+    }
+
+    .tab:hover:not(.active) { color: #c0c8e0; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .drop-zone {
+      border: 2px dashed #2a3050;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 20px;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #6c8cff;
+      background: rgba(108, 140, 255, 0.05);
+    }
+
+    .drop-zone .icon {
+      font-size: 2.4rem;
+      margin-bottom: 12px;
+    }
+
+    .drop-zone p {
+      color: #8892a8;
+      font-size: 0.95rem;
+    }
+
+    .drop-zone .browse {
+      color: #6c8cff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .file-input { display: none; }
+
+    .file-info {
+      display: none;
+      background: #0d1321;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .file-info.visible { display: block; }
+
+    .file-info .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+
+    .file-info .label {
+      color: #8892a8;
+      font-size: 0.85rem;
+    }
+
+    .file-info .value {
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      max-width: 60%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .result-box {
+      display: none;
+      background: #0d1321;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+
+    .result-box.visible { display: block; }
+
+    .result-box .label {
+      font-size: 0.8rem;
+      color: #8892a8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .hash-display {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hash-display code {
+      flex: 1;
+      background: #1a1f35;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.82rem;
+      color: #6c8cff;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: #6c8cff;
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: #5a7af0; }
+
+    .btn-copy {
+      background: #1e293b;
+      color: #e0e0e0;
+      border: 1px solid #2a3050;
+    }
+
+    .btn-copy:hover { background: #2a3050; }
+
+    .btn-copy.copied {
+      background: #10b981;
+      color: #fff;
+      border-color: #10b981;
+    }
+
+    .separator {
+      height: 1px;
+      background: #1e293b;
+      margin: 20px 0;
+    }
+
+    .verify-section { margin-top: 8px; }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #8892a8;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .input-group input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: #0d1321;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-group input[type="text"]:focus {
+      border-color: #6c8cff;
+    }
+
+    .input-group input[type="text"]::placeholder {
+      color: #4a5568;
+    }
+
+    .verify-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+    }
+
+    .verify-result {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    .verify-result.visible { display: block; }
+
+    .verify-result.match {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .verify-result.no-match {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .verify-result .icon { font-size: 2rem; margin-bottom: 8px; }
+
+    .verify-result .text {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .verify-result.match .text { color: #10b981; }
+    .verify-result.no-match .text { color: #ef4444; }
+
+    .verify-result .detail {
+      font-size: 0.85rem;
+      color: #8892a8;
+      margin-top: 6px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 16px;
+      color: #8892a8;
+    }
+
+    .loading.visible { display: block; }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #2a3050;
+      border-top-color: #6c8cff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: #4a5568;
+      font-size: 0.8rem;
+    }
+
+    .footer a {
+      color: #6c8cff;
+      text-decoration: none;
+    }
+
+    .algo-badge {
+      display: inline-block;
+      background: #1e293b;
+      color: #6c8cff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Document <span>Hash Generator</span></h1>
+    <p>Genera y verifica hashes keccak256 para documentos — Blockchain Document Registry</p>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('generate')">Generar Hash</button>
+      <button class="tab" onclick="switchTab('verify')">Verificar Documento</button>
+    </div>
+
+    <!-- GENERAR HASH -->
+    <div id="panel-generate" class="panel active">
+      <div class="card">
+        <div class="algo-badge">Algoritmo: keccak256</div>
+
+        <div class="drop-zone" id="dropZone">
+          <div class="icon">📄</div>
+          <p>Arrastrá tu documento aquí</p>
+          <p style="margin-top: 8px;">o <span class="browse" onclick="document.getElementById('fileInput').click()">buscalo en tu PC</span></p>
+        </div>
+        <input type="file" id="fileInput" class="file-input" />
+
+        <div class="file-info" id="fileInfo">
+          <div class="row">
+            <span class="label">Nombre</span>
+            <span class="value" id="fileName">-</span>
+          </div>
+          <div class="row">
+            <span class="label">Tamaño</span>
+            <span class="value" id="fileSize">-</span>
+          </div>
+          <div class="row">
+            <span class="label">Tipo</span>
+            <span class="value" id="fileType">-</span>
+          </div>
+        </div>
+
+        <div class="loading" id="loadingGen">
+          <span class="spinner"></span> Generando hash...
+        </div>
+
+        <div class="result-box" id="resultBox">
+          <div class="label">Hash keccak256 del documento</div>
+          <div class="hash-display">
+            <code id="hashOutput">-</code>
+            <button class="btn btn-copy" id="copyBtn" onclick="copyHash()">Copiar</button>
+          </div>
+          <div style="margin-top: 12px;">
+            <p style="font-size: 0.8rem; color: #8892a8;">
+              Usá este hash en <code style="color: #6c8cff;">registerDocument()</code> del contrato
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERIFICAR DOCUMENTO -->
+    <div id="panel-verify" class="panel">
+      <div class="card">
+        <div class="algo-badge">Verificación de integridad</div>
+
+        <div class="input-group">
+          <label>Hash a verificar (0x...)</label>
+          <input type="text" id="hashInput" placeholder="0x8a7b3f..." />
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="input-group">
+          <label>Documento original</label>
+          <div class="drop-zone" id="dropZone2" style="padding: 28px 24px; margin-bottom: 0;">
+            <p>Arrastrá el documento o <span class="browse" onclick="document.getElementById('fileInput2').click()">buscalo</span></p>
+          </div>
+          <input type="file" id="fileInput2" class="file-input" />
+        </div>
+
+        <div class="file-info" id="fileInfo2">
+          <div class="row">
+            <span class="label">Nombre</span>
+            <span class="value" id="fileName2">-</span>
+          </div>
+          <div class="row">
+            <span class="label">Tamaño</span>
+            <span class="value" id="fileSize2">-</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary verify-btn" onclick="verifyDocument()">
+          Verificar Hash
+        </button>
+
+        <div class="loading" id="loadingVerify">
+          <span class="spinner"></span> Verificando...
+        </div>
+
+        <div class="verify-result" id="verifyResult">
+          <div class="icon" id="verifyIcon"></div>
+          <div class="text" id="verifyText"></div>
+          <div class="detail" id="verifyDetail"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Blockchain Document Registry — Hash Generator<br>
+    <a href="https://github.com/maximogarmasarvazquez/blockchain-document-registry-" target="_blank">Ver en GitHub</a>
+  </div>
+
+  <script>
+    // --- State ---
+    let currentFile = null;
+    let currentFile2 = null;
+    let currentHash = '';
+
+    // --- Tab switching ---
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+    }
+
+    // --- Utility ---
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async function readFileBytes(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(new Uint8Array(reader.result));
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    // --- Generate Hash ---
+    async function generateHash(file) {
+      currentFile = file;
+
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = formatSize(file.size);
+      document.getElementById('fileType').textContent = file.type || 'Desconocido';
+      document.getElementById('fileInfo').classList.add('visible');
+      document.getElementById('resultBox').classList.remove('visible');
+      document.getElementById('loadingGen').classList.add('visible');
+
+      try {
+        const bytes = await readFileBytes(file);
+        const hash = ethers.keccak256(bytes);
+        currentHash = hash;
+
+        document.getElementById('hashOutput').textContent = hash;
+        document.getElementById('resultBox').classList.add('visible');
+        document.getElementById('copyBtn').textContent = 'Copiar';
+        document.getElementById('copyBtn').classList.remove('copied');
+      } catch (err) {
+        alert('Error al leer el archivo: ' + err.message);
+      } finally {
+        document.getElementById('loadingGen').classList.remove('visible');
+      }
+    }
+
+    function copyHash() {
+      navigator.clipboard.writeText(currentHash).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copiado!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copiar';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // --- Verify Hash ---
+    async function verifyDocument() {
+      const hashInput = document.getElementById('hashInput').value.trim();
+      const file = currentFile2;
+
+      document.getElementById('verifyResult').classList.remove('visible', 'match', 'no-match');
+
+      if (!hashInput) {
+        alert('Ingresá un hash para verificar');
+        return;
+      }
+      if (!file) {
+        alert('Seleccioná un documento para verificar');
+        return;
+      }
+
+      document.getElementById('loadingVerify').classList.add('visible');
+
+      try {
+        const bytes = await readFileBytes(file);
+        const computedHash = ethers.keccak256(bytes);
+
+        const match = computedHash.toLowerCase() === hashInput.toLowerCase();
+
+        const resultEl = document.getElementById('verifyResult');
+        const iconEl = document.getElementById('verifyIcon');
+        const textEl = document.getElementById('verifyText');
+        const detailEl = document.getElementById('verifyDetail');
+
+        resultEl.classList.add('visible');
+
+        if (match) {
+          resultEl.classList.add('match');
+          iconEl.textContent = '✅';
+          textEl.textContent = '¡El hash coincide!';
+          detailEl.textContent = 'El documento es íntegro y corresponde al hash registrado.';
+        } else {
+          resultEl.classList.add('no-match');
+          iconEl.textContent = '❌';
+          textEl.textContent = 'El hash NO coincide';
+          detailEl.innerHTML =
+            'Hash del documento: <code style="color:#ef4444; font-size:0.8rem;">' + computedHash + '</code>';
+        }
+      } catch (err) {
+        alert('Error al verificar: ' + err.message);
+      } finally {
+        document.getElementById('loadingVerify').classList.remove('visible');
+      }
+    }
+
+    // --- Drag & Drop + File Input: Panel Generate ---
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) generateHash(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) generateHash(e.target.files[0]);
+    });
+
+    // --- Drag & Drop + File Input: Panel Verify ---
+    const dropZone2 = document.getElementById('dropZone2');
+    const fileInput2 = document.getElementById('fileInput2');
+
+    dropZone2.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone2.classList.add('dragover');
+    });
+    dropZone2.addEventListener('dragleave', () => dropZone2.classList.remove('dragover'));
+    dropZone2.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone2.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        currentFile2 = e.dataTransfer.files[0];
+        document.getElementById('fileName2').textContent = currentFile2.name;
+        document.getElementById('fileSize2').textContent = formatSize(currentFile2.size);
+        document.getElementById('fileInfo2').classList.add('visible');
+      }
+    });
+    fileInput2.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        currentFile2 = e.target.files[0];
+        document.getElementById('fileName2').textContent = currentFile2.name;
+        document.getElementById('fileSize2').textContent = formatSize(currentFile2.size);
+        document.getElementById('fileInfo2').classList.add('visible');
+      }
+    });
+  </script>
+
+</body>
+</html>
