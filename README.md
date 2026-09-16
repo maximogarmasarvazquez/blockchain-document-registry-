@@ -80,7 +80,7 @@ npx hardhat test solidity
 - `vm.expectEmit` verifica que se emita el **evento** correcto (`DocumentRegistered`, `DocumentSigned`).
 - `testFuzz_RegisterDocument(bytes32 hash)` corre la misma prueba con **256 hashes aleatorios** (con `vm.assume` descartando el hash inválido `0x0`).
 
-Es decir: no hay un cliente/meta-máscara real, el test **prankea** distintas direcciones para cubrir registros, firmas, eventos, errores y múltiples firmantes. Ver el log de ejemplo en el [informe](https://github.com/maximogarmasarvazquez/blockchain-document-registry-).
+Es decir: no hay un cliente/meta-máscara real, el test **prankea** distintas direcciones para cubrir registros, firmas, eventos, errores y múltiples firmantes.
 
 ---
 
@@ -145,11 +145,6 @@ El workflow de GitHub Actions está en `.github/workflows/ci.yml`.
 3. `npm ci` — instala las dependencias exactas del `package-lock.json`.
 4. `npm test` (equivale a `npx hardhat test`) — ejecuta las **14 pruebas de Solidity en el EVM simulado** de Hardhat.
 
-### ¿Necesita algún secreto?
-
-**No.** Los tests corren en el EVM simulado, sin red real, así que el CI funciona igual en el repositorio clonado/copiado que en GitHub. Lo único que hace falta es el propio repositorio (la orden para correrlo a mano es `npm test`).
-
----
 
 ## Datos del despliegue (verificados en Sepolia Etherscan)
 
