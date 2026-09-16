@@ -28,7 +28,7 @@ npm ci
 
 ## 1) Generar el hash de un documento (herramienta HTML)
 
-La herramienta `tools/hash-generator.html` genera el hash **keccak256** de un archivo y también permite verificar que un archivo coincide con un hash dado. No envía el archivo a ningún servidor: todo el cálculo ocurre en tu navegador.
+La herramienta `tools/hash-generator.html` genera el hash **keccak256** de un archivo y también permite verificar que un archivo coincide con un hash dado. No envía el archivo a ningún servidor: todo el cálculo ocurre en tu navegador. Es un archivo **autocontenido** (la implementación de keccak256 va embebida), por lo que funciona sin dependencias externas ni conexión a internet.
 
 **Abrir la herramienta:**
 
